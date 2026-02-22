@@ -22,13 +22,19 @@ _start:		la			t0,			first
 			mret
 
 _init:		li			t0,			0x10000000
-			li			t1,			'A'
-			sb			t1,			0(t0)
+			la			t1,			hello
+			lb			t2,			0(t1)
+	0:		sb			t2,			0(t0)
+			addi		t1,			t1,				1
+			lb			t2,			0(t1)
+			bnez		t2,			0b
 
 idle:		wfi
 			j			idle
 
 .section	.data
+
+hello:		.asciz	"Hello, world!"
 
 			.align	2
 first:		.word	0

@@ -1,12 +1,18 @@
 .{
     .riscv32 = .{
-        .arch = .{
-            .name = "riscv",
-            .boot = .{"head.s"},
+        .arch = .riscv32,
+        .features = .{ .@"32bit", .i, .a },
+        .files = .{
+            .path = "arch/riscv",
+            .boot = .{"boot/head.s"},
         },
-        .cpu = .{
-            .arch = .riscv32,
-            .features = .{ .@"32bit", .i, .a },
+    },
+    .riscv64 = .{
+        .arch = .riscv64,
+        .features = .{ .@"64bit", .i, .a },
+        .files = .{
+            .path = "arch/riscv",
+            .boot = .{"boot/head.s"},
         },
     },
 }
