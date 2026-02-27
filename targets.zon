@@ -1,0 +1,11 @@
+.{
+    .riscv32 = .{
+        .arch = .riscv32,
+        .features = .{ .@"32bit", .i, .a },
+        .files = .{
+            .path = "arch/riscv",
+            .head = .{"head.s"},
+            .boot = .{"boot.S"},
+        },
+    },
+}
