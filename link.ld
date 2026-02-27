@@ -1,12 +1,15 @@
-OUTPUT_FORMAT(binary)
-
 SECTIONS {
     .blob :
     {
-        *head.o(.text*);
+        *head.o(.text*)
 
-        *(.text*);
-        *(.rodata*);
-        *(.data*);
+        *(.text*)
+        *(.rodata*)
+        *(.data*)
     }
+
+
+    . = ALIGN(16);
+    . += 4096;
+    _stack = .;
 }

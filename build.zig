@@ -18,6 +18,7 @@ fn build_target(
     comptime target: anytype,
 ) void {
     const create = std.Build.Module.CreateOptions{
+        .unwind_tables = .none,
         .target = target.resolved(),
         .optimize = switch (b.release_mode) {
             .fast => .ReleaseFast,
@@ -63,8 +64,27 @@ fn build_target(
         install(b, name, obj);
     }
 
+    {
+        const opts = merge(create, .{
+            .root_source_file = b.path("init/main.zig"),
+            .code_model = target.model,
+        });
+
+        const obj = b.addObject(.{
+            .name = "init",
+            .root_module = b.createModule(opts),
+        });
+
+        module.addObject(obj);
+        install(b, name, obj);
+    }
+
     const exe = b.addExecutable(.{ .name = "kernel", .root_module = module });
     exe.setLinkerScript(b.path("link.ld"));
+
+    const copy = b.addObjCopy(exe.getEmittedBin(), .{ .format = .bin });
+    const i = b.addInstallBinFile(copy.getOutput(), name);
+    b.getInstallStep().dependOn(&i.step);
 
     install(b, name, exe);
 }
@@ -124,7 +144,8 @@ fn Target(comptime arch: std.Target.Cpu.Arch) type {
 
     return struct {
         arch: std.Target.Cpu.Arch,
-        features: []const family.Feature,
+        feats: []const family.Feature,
+        model: std.builtin.CodeModel,
         files: struct {
             path: []const u8,
             head: []const []const u8,
@@ -136,7 +157,7 @@ fn Target(comptime arch: std.Target.Cpu.Arch) type {
                 .cpu = .{
                     .arch = self.arch,
                     .model = &family.cpu.generic,
-                    .features = family.featureSet(self.features),
+                    .features = family.featureSet(self.feats),
                 },
                 .os = .{
                     .tag = .freestanding,
@@ -165,10 +186,7 @@ fn Overrides(comptime T: type) type {
         const val: ?field.type = null;
         names[i] = field.name;
         types[i] = ?field.type;
-        attrs[i] = .{
-            .@"comptime" = false,
-            .default_value_ptr = @ptrCast(&val),
-        };
+        attrs[i] = .{ .default_value_ptr = @ptrCast(&val) };
     }
 
     return @Struct(.auto, null, &names, &types, &attrs);
