@@ -2,7 +2,7 @@ const uart: *volatile u8 = @ptrFromInt(0x10000000);
 
 const str = "Hello, world!\n";
 
-export fn start() noreturn {
+export fn init() noreturn {
     for (str) |char|
         uart.* = char;
     idle();

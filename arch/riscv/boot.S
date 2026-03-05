@@ -1,10 +1,10 @@
 #include <asm.h>
 
-.extern		start
+.extern		init
 
 .global		_boot
 
 .section	.text
 
 _boot:		la		sp,		_stack
-			j		start
+			j		init

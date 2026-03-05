@@ -1,8 +1,12 @@
 .{
     .riscv32 = .{
-        .arch = .riscv32,
-        .model = .medany,
-        .feats = .{ .@"32bit", .i, .a },
+        .target = .{
+            .cpu = .{
+                .arch = .riscv32,
+                .feats = .{ .@"32bit", .i, .a },
+            },
+            .model = .medany,
+        },
         .files = .{
             .path = "arch/riscv",
             .head = .{"head.s"},

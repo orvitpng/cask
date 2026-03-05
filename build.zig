@@ -1,12 +1,11 @@
 const std = @import("std");
 const builtin = @import("builtin");
 
-const targets: Targets = @import("targets.zon");
-
-const Targets = Type();
+const targets: Targets() = @import("targets.zon");
 
 pub fn build(b: *std.Build) !void {
-    inline for (@typeInfo(Targets).@"struct".fields) |field| {
+    const Type = @TypeOf(targets);
+    inline for (@typeInfo(Type).@"struct".fields) |field| {
         const target = @field(targets, field.name);
         build_target(b, field.name, target);
     }
@@ -18,14 +17,15 @@ fn build_target(
     comptime target: anytype,
 ) void {
     const create = std.Build.Module.CreateOptions{
-        .unwind_tables = .none,
-        .target = target.resolved(),
         .optimize = switch (b.release_mode) {
             .fast => .ReleaseFast,
             .safe => .ReleaseSafe,
             .small => .ReleaseSmall,
             else => .Debug,
         },
+        .target = target.resolved(),
+        .code_model = target.target.model,
+        .unwind_tables = .none,
     };
 
     const module = b.createModule(create);
@@ -67,7 +67,6 @@ fn build_target(
     {
         const opts = merge(create, .{
             .root_source_file = b.path("init/main.zig"),
-            .code_model = target.model,
         });
 
         const obj = b.addObject(.{
@@ -114,7 +113,7 @@ fn merge(base: anytype, ovrds: Overrides(@TypeOf(base))) @TypeOf(base) {
     return opts;
 }
 
-fn Type() type {
+fn Targets() type {
     const zon = @import("targets.zon");
     const Zon = @TypeOf(zon);
 
@@ -125,7 +124,7 @@ fn Type() type {
         undefined;
 
     inline for (info.fields, 0..) |field, i| {
-        const name = @field(zon, field.name).arch;
+        const name = @field(zon, field.name).target.cpu.arch;
         const arch = std.meta.stringToEnum(
             std.Target.Cpu.Arch,
             @tagName(name),
@@ -143,9 +142,13 @@ fn Target(comptime arch: std.Target.Cpu.Arch) type {
     const family = @field(std.Target, @tagName(arch.family()));
 
     return struct {
-        arch: std.Target.Cpu.Arch,
-        feats: []const family.Feature,
-        model: std.builtin.CodeModel,
+        target: struct {
+            cpu: struct {
+                arch: std.Target.Cpu.Arch,
+                feats: []const family.Feature,
+            },
+            model: std.builtin.CodeModel,
+        },
         files: struct {
             path: []const u8,
             head: []const []const u8,
@@ -155,9 +158,9 @@ fn Target(comptime arch: std.Target.Cpu.Arch) type {
         pub fn resolved(self: @This()) std.Build.ResolvedTarget {
             const target = std.Target{
                 .cpu = .{
-                    .arch = self.arch,
+                    .arch = arch,
                     .model = &family.cpu.generic,
-                    .features = family.featureSet(self.feats),
+                    .features = family.featureSet(self.target.cpu.feats),
                 },
                 .os = .{
                     .tag = .freestanding,
