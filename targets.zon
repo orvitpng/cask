@@ -9,7 +9,7 @@
         },
         .files = .{
             .path = "arch/riscv",
-            .head = .{"head.s"},
+            .head = .{"head.S"},
             .boot = .{"boot.S"},
         },
     },

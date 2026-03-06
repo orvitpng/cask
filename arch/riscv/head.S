@@ -1,14 +1,21 @@
+#include <config.h>
+
 .extern		_boot
 
 .global		_start
 
 .section	.text
 
-_start:		la			t0,			first
+_start:
+
+#ifdef CONFIG_SMP
+			la			t0,			first
 			amoswap.w	t0,			t0,		0(t0)
 			bnez		t0,			idle
+#endif
 
 			la			t0,			_boot
+#ifdef CONFIG_S
 			csrw		stvec,		t0
 			csrw		mepc,		t0
 
@@ -21,7 +28,11 @@ _start:		la			t0,			first
 			csrw		pmpaddr0,	t1
 
 			mret
+#else
+			jr			t0
+#endif
 
+#ifdef CONFIG_SMP
 idle:		wfi
 			j			idle
 
@@ -29,3 +40,4 @@ idle:		wfi
 
 			.align	2
 first:		.word	0
+#endif

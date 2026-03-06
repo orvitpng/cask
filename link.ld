@@ -8,6 +8,11 @@ SECTIONS {
         *(.data*)
     }
 
+    .bss : {
+        __bss = .;
+        *(.bss*)
+        __bss_top = .;
+    }
 
     . = ALIGN(16);
     . += 4096;

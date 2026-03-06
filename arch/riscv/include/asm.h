@@ -10,4 +10,6 @@
 #define L SEL(lw, ld)
 #define S SEL(sw, sd)
 
+#define SIZE SEL(4, 8)
+
 #endif
